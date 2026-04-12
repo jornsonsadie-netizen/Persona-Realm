@@ -1,22 +1,28 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: AI Roleplay Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
+  - name: admin
+  - name: characters
+  - name: personas
+  - name: chats
+  - name: messages
+  - name: tags
+  - name: groups
+  - name: uploads
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +30,810 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ─── Admin ────────────────────────────────────────────────────────────────
+  /admin/settings:
+    get:
+      operationId: getAdminSettings
+      tags: [admin]
+      summary: Get admin settings
+      responses:
+        "200":
+          description: Admin settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSettings"
+    patch:
+      operationId: updateAdminSettings
+      tags: [admin]
+      summary: Update admin settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAdminSettingsBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSettings"
+
+  /admin/models:
+    get:
+      operationId: listAdminModels
+      tags: [admin]
+      summary: List all AI models
+      responses:
+        "200":
+          description: Models list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AiModel"
+    post:
+      operationId: createAdminModel
+      tags: [admin]
+      summary: Add a new AI model
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAiModelBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiModel"
+
+  /admin/models/{id}:
+    patch:
+      operationId: updateAdminModel
+      tags: [admin]
+      summary: Update an AI model (rename, enable/disable)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateAiModelBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiModel"
+    delete:
+      operationId: deleteAdminModel
+      tags: [admin]
+      summary: Delete an AI model
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Admin dashboard stats
+      responses:
+        "200":
+          description: Stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
+  # ─── Characters ───────────────────────────────────────────────────────────
+  /characters:
+    get:
+      operationId: listCharacters
+      tags: [characters]
+      summary: List/search characters
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: tags
+          in: query
+          schema:
+            type: ["string", "null"]
+        - name: mine
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Characters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Character"
+    post:
+      operationId: createCharacter
+      tags: [characters]
+      summary: Create a character
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateCharacterBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Character"
+
+  /characters/featured:
+    get:
+      operationId: getFeaturedCharacters
+      tags: [characters]
+      summary: Get featured/trending characters
+      responses:
+        "200":
+          description: Featured characters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Character"
+
+  /characters/{id}:
+    get:
+      operationId: getCharacter
+      tags: [characters]
+      summary: Get a character
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Character
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Character"
+    patch:
+      operationId: updateCharacter
+      tags: [characters]
+      summary: Update a character (owner only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateCharacterBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Character"
+    delete:
+      operationId: deleteCharacter
+      tags: [characters]
+      summary: Delete a character (owner only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Personas ─────────────────────────────────────────────────────────────
+  /personas:
+    get:
+      operationId: listPersonas
+      tags: [personas]
+      summary: List my personas
+      responses:
+        "200":
+          description: Personas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Persona"
+    post:
+      operationId: createPersona
+      tags: [personas]
+      summary: Create a persona
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePersonaBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Persona"
+
+  /personas/search:
+    get:
+      operationId: searchPersonas
+      tags: [personas]
+      summary: Search all personas
+      parameters:
+        - name: q
+          in: query
+          schema:
+            type: ["string", "null"]
+      responses:
+        "200":
+          description: Personas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Persona"
+
+  /personas/{id}:
+    get:
+      operationId: getPersona
+      tags: [personas]
+      summary: Get a persona
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Persona
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Persona"
+    patch:
+      operationId: updatePersona
+      tags: [personas]
+      summary: Update a persona
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatePersonaBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Persona"
+    delete:
+      operationId: deletePersona
+      tags: [personas]
+      summary: Delete a persona
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /personas/{id}/main:
+    post:
+      operationId: setMainPersona
+      tags: [personas]
+      summary: Set persona as main
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Persona"
+
+  # ─── Tags ─────────────────────────────────────────────────────────────────
+  /tags:
+    get:
+      operationId: listTags
+      tags: [tags]
+      summary: List all tags
+      responses:
+        "200":
+          description: Tags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tag"
+    post:
+      operationId: createTag
+      tags: [tags]
+      summary: Create a tag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTagBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tag"
+
+  # ─── Chats ────────────────────────────────────────────────────────────────
+  /chats:
+    get:
+      operationId: listChats
+      tags: [chats]
+      summary: List my chats
+      responses:
+        "200":
+          description: Chats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Chat"
+    post:
+      operationId: createChat
+      tags: [chats]
+      summary: Create a new chat with a character
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateChatBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chat"
+
+  /chats/{id}:
+    get:
+      operationId: getChat
+      tags: [chats]
+      summary: Get a chat with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Chat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatWithMessages"
+    patch:
+      operationId: updateChat
+      tags: [chats]
+      summary: Update chat (system prompt)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateChatBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Chat"
+    delete:
+      operationId: deleteChat
+      tags: [chats]
+      summary: Delete a chat and its history
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /chats/{id}/messages:
+    post:
+      operationId: sendMessage
+      tags: [messages]
+      summary: Send a message and get AI response
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendMessageBody"
+      responses:
+        "200":
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessagePair"
+
+  /chats/{id}/messages/{msgId}:
+    delete:
+      operationId: deleteMessage
+      tags: [messages]
+      summary: Delete a message
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: msgId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  # ─── Group Chats ──────────────────────────────────────────────────────────
+  /groups:
+    get:
+      operationId: listGroups
+      tags: [groups]
+      summary: List my group chats
+      responses:
+        "200":
+          description: Groups
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GroupChat"
+    post:
+      operationId: createGroup
+      tags: [groups]
+      summary: Create a group chat
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateGroupBody"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupChat"
+
+  /groups/{id}:
+    get:
+      operationId: getGroup
+      tags: [groups]
+      summary: Get a group chat with messages
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Group chat
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupChatWithMessages"
+    delete:
+      operationId: deleteGroup
+      tags: [groups]
+      summary: Delete a group chat
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /groups/{id}/members:
+    post:
+      operationId: addGroupMember
+      tags: [groups]
+      summary: Add a character or persona to a group
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AddGroupMemberBody"
+      responses:
+        "200":
+          description: Updated group
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupChat"
+
+  /groups/{id}/members/{memberId}:
+    delete:
+      operationId: removeGroupMember
+      tags: [groups]
+      summary: Remove a member from a group
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: memberId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Removed
+
+  /groups/{id}/messages:
+    post:
+      operationId: sendGroupMessage
+      tags: [groups]
+      summary: Send a message in a group chat
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendGroupMessageBody"
+      responses:
+        "200":
+          description: Group messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GroupMessage"
+
+  /groups/{id}/invite:
+    post:
+      operationId: sendGroupInvite
+      tags: [groups]
+      summary: Invite another user's persona to the group
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendGroupInviteBody"
+      responses:
+        "200":
+          description: Invite sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupInvite"
+
+  /groups/invites:
+    get:
+      operationId: listGroupInvites
+      tags: [groups]
+      summary: List pending invites for me
+      responses:
+        "200":
+          description: Invites
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/GroupInvite"
+
+  /groups/invites/{id}/respond:
+    post:
+      operationId: respondGroupInvite
+      tags: [groups]
+      summary: Accept or decline a group invite
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RespondGroupInviteBody"
+      responses:
+        "200":
+          description: Responded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GroupInvite"
+
+  # ─── File Upload ──────────────────────────────────────────────────────────
+  /uploads/image:
+    post:
+      operationId: uploadImage
+      tags: [uploads]
+      summary: Upload an image
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Upload result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResult"
+
+  # ─── Direct Messages ──────────────────────────────────────────────────────
+  /dm:
+    get:
+      operationId: listDmConversations
+      tags: [chats]
+      summary: List direct message conversations
+      responses:
+        "200":
+          description: DM conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DmConversation"
+    post:
+      operationId: sendDm
+      tags: [chats]
+      summary: Send a direct message to a persona
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SendDmBody"
+      responses:
+        "201":
+          description: Message sent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DmMessage"
+
+  /dm/{personaId}:
+    get:
+      operationId: getDmMessages
+      tags: [chats]
+      summary: Get DM messages with a persona
+      parameters:
+        - name: personaId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DmMessage"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +841,586 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    AdminSettings:
+      type: object
+      properties:
+        id:
+          type: integer
+        aiProviderName:
+          type: string
+        aiProviderEndpoint:
+          type: string
+        aiProviderApiKey:
+          type: ["string", "null"]
+        maxContextSize:
+          type: integer
+        contextSummarizationThreshold:
+          type: integer
+        updatedAt:
+          type: string
+      required: [id, aiProviderName, aiProviderEndpoint, maxContextSize, contextSummarizationThreshold, updatedAt]
+
+    UpdateAdminSettingsBody:
+      type: object
+      properties:
+        aiProviderName:
+          type: ["string", "null"]
+        aiProviderEndpoint:
+          type: ["string", "null"]
+        aiProviderApiKey:
+          type: ["string", "null"]
+        maxContextSize:
+          type: ["integer", "null"]
+        contextSummarizationThreshold:
+          type: ["integer", "null"]
+
+    AiModel:
+      type: object
+      properties:
+        id:
+          type: integer
+        modelId:
+          type: string
+        displayName:
+          type: string
+        enabled:
+          type: boolean
+        isDefault:
+          type: boolean
+        createdAt:
+          type: string
+      required: [id, modelId, displayName, enabled, isDefault, createdAt]
+
+    CreateAiModelBody:
+      type: object
+      properties:
+        modelId:
+          type: string
+        displayName:
+          type: string
+        isDefault:
+          type: boolean
+      required: [modelId, displayName]
+
+    UpdateAiModelBody:
+      type: object
+      properties:
+        displayName:
+          type: ["string", "null"]
+        enabled:
+          type: ["boolean", "null"]
+        isDefault:
+          type: ["boolean", "null"]
+
+    AdminStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        totalCharacters:
+          type: integer
+        totalChats:
+          type: integer
+        totalMessages:
+          type: integer
+        activeModels:
+          type: integer
+      required: [totalUsers, totalCharacters, totalChats, totalMessages, activeModels]
+
+    Character:
+      type: object
+      properties:
+        id:
+          type: integer
+        ownerUserId:
+          type: string
+        name:
+          type: string
+        age:
+          type: integer
+        personality:
+          type: string
+        description:
+          type: string
+        profilePicture:
+          type: ["string", "null"]
+        backgroundStory:
+          type: string
+        lore:
+          type: string
+        introMessage:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        chatCount:
+          type: integer
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, ownerUserId, name, age, personality, description, backgroundStory, lore, introMessage, tags, chatCount, createdAt, updatedAt]
+
+    CreateCharacterBody:
+      type: object
+      properties:
+        name:
+          type: string
+        age:
+          type: integer
+        personality:
+          type: string
+        description:
+          type: string
+        profilePicture:
+          type: ["string", "null"]
+        backgroundStory:
+          type: string
+        lore:
+          type: string
+        introMessage:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+      required: [name, age, personality, description, backgroundStory, lore, introMessage]
+
+    UpdateCharacterBody:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+        age:
+          type: ["integer", "null"]
+        personality:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        profilePicture:
+          type: ["string", "null"]
+        backgroundStory:
+          type: ["string", "null"]
+        lore:
+          type: ["string", "null"]
+        introMessage:
+          type: ["string", "null"]
+        tags:
+          type: ["array", "null"]
+          items:
+            type: string
+
+    Persona:
+      type: object
+      properties:
+        id:
+          type: integer
+        ownerUserId:
+          type: string
+        name:
+          type: string
+        age:
+          type: integer
+        personality:
+          type: string
+        description:
+          type: string
+        lore:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        isMain:
+          type: boolean
+        avatarUrl:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required: [id, ownerUserId, name, age, personality, description, lore, tags, isMain, createdAt]
+
+    CreatePersonaBody:
+      type: object
+      properties:
+        name:
+          type: string
+        age:
+          type: integer
+        personality:
+          type: string
+        description:
+          type: string
+        lore:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        avatarUrl:
+          type: ["string", "null"]
+      required: [name, age, personality, description, lore]
+
+    UpdatePersonaBody:
+      type: object
+      properties:
+        name:
+          type: ["string", "null"]
+        age:
+          type: ["integer", "null"]
+        personality:
+          type: ["string", "null"]
+        description:
+          type: ["string", "null"]
+        lore:
+          type: ["string", "null"]
+        tags:
+          type: ["array", "null"]
+          items:
+            type: string
+        avatarUrl:
+          type: ["string", "null"]
+
+    Tag:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        usageCount:
+          type: integer
+      required: [id, name, usageCount]
+
+    CreateTagBody:
+      type: object
+      properties:
+        name:
+          type: string
+      required: [name]
+
+    Chat:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        characterId:
+          type: integer
+        personaId:
+          type: integer
+        character:
+          $ref: "#/components/schemas/Character"
+        persona:
+          $ref: "#/components/schemas/Persona"
+        systemPrompt:
+          type: ["string", "null"]
+        modelId:
+          type: ["integer", "null"]
+        lastMessageAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required: [id, userId, characterId, personaId, createdAt]
+
+    CreateChatBody:
+      type: object
+      properties:
+        characterId:
+          type: integer
+        personaId:
+          type: integer
+        modelId:
+          type: ["integer", "null"]
+        systemPrompt:
+          type: ["string", "null"]
+      required: [characterId, personaId]
+
+    UpdateChatBody:
+      type: object
+      properties:
+        systemPrompt:
+          type: ["string", "null"]
+        modelId:
+          type: ["integer", "null"]
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+        chatId:
+          type: integer
+        role:
+          type: string
+        content:
+          type: string
+        modelUsed:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required: [id, chatId, role, content, createdAt]
+
+    ChatWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: string
+        characterId:
+          type: integer
+        personaId:
+          type: integer
+        character:
+          $ref: "#/components/schemas/Character"
+        persona:
+          $ref: "#/components/schemas/Persona"
+        systemPrompt:
+          type: ["string", "null"]
+        modelId:
+          type: ["integer", "null"]
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/Message"
+        lastMessageAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required: [id, userId, characterId, personaId, messages, createdAt]
+
+    SendMessageBody:
+      type: object
+      properties:
+        content:
+          type: string
+        modelId:
+          type: ["integer", "null"]
+      required: [content]
+
+    MessagePair:
+      type: object
+      properties:
+        userMessage:
+          $ref: "#/components/schemas/Message"
+        assistantMessage:
+          $ref: "#/components/schemas/Message"
+        modelUsed:
+          type: string
+        blocked:
+          type: boolean
+        blockReason:
+          type: ["string", "null"]
+      required: [userMessage, assistantMessage, modelUsed, blocked]
+
+    GroupChat:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        ownerUserId:
+          type: string
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/GroupMember"
+        createdAt:
+          type: string
+      required: [id, name, ownerUserId, members, createdAt]
+
+    GroupChatWithMessages:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        ownerUserId:
+          type: string
+        members:
+          type: array
+          items:
+            $ref: "#/components/schemas/GroupMember"
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/GroupMessage"
+        createdAt:
+          type: string
+      required: [id, name, ownerUserId, members, messages, createdAt]
+
+    GroupMember:
+      type: object
+      properties:
+        id:
+          type: integer
+        groupId:
+          type: integer
+        memberType:
+          type: string
+        characterId:
+          type: ["integer", "null"]
+        personaId:
+          type: ["integer", "null"]
+        userId:
+          type: ["string", "null"]
+        character:
+          $ref: "#/components/schemas/Character"
+        persona:
+          $ref: "#/components/schemas/Persona"
+        joinedAt:
+          type: string
+      required: [id, groupId, memberType, joinedAt]
+
+    GroupMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        groupId:
+          type: integer
+        senderType:
+          type: string
+        senderId:
+          type: ["integer", "null"]
+        senderUserId:
+          type: ["string", "null"]
+        senderName:
+          type: string
+        content:
+          type: string
+        modelUsed:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+      required: [id, groupId, senderType, senderName, content, createdAt]
+
+    CreateGroupBody:
+      type: object
+      properties:
+        name:
+          type: string
+        personaId:
+          type: integer
+        characterIds:
+          type: array
+          items:
+            type: integer
+      required: [name, personaId]
+
+    AddGroupMemberBody:
+      type: object
+      properties:
+        memberType:
+          type: string
+        characterId:
+          type: ["integer", "null"]
+        personaId:
+          type: ["integer", "null"]
+      required: [memberType]
+
+    SendGroupMessageBody:
+      type: object
+      properties:
+        content:
+          type: string
+        personaId:
+          type: integer
+      required: [content, personaId]
+
+    GroupInvite:
+      type: object
+      properties:
+        id:
+          type: integer
+        groupId:
+          type: integer
+        inviterPersonaId:
+          type: integer
+        inviteePersonaId:
+          type: integer
+        status:
+          type: string
+        group:
+          $ref: "#/components/schemas/GroupChat"
+        inviterPersona:
+          $ref: "#/components/schemas/Persona"
+        inviteePersona:
+          $ref: "#/components/schemas/Persona"
+        createdAt:
+          type: string
+      required: [id, groupId, inviterPersonaId, inviteePersonaId, status, createdAt]
+
+    SendGroupInviteBody:
+      type: object
+      properties:
+        inviterPersonaId:
+          type: integer
+        inviteePersonaId:
+          type: integer
+      required: [inviterPersonaId, inviteePersonaId]
+
+    RespondGroupInviteBody:
+      type: object
+      properties:
+        accept:
+          type: boolean
+      required: [accept]
+
+    UploadResult:
+      type: object
+      properties:
+        url:
+          type: string
+        filename:
+          type: string
+      required: [url, filename]
+
+    DmConversation:
+      type: object
+      properties:
+        personaId:
+          type: integer
+        persona:
+          $ref: "#/components/schemas/Persona"
+        lastMessage:
+          type: ["string", "null"]
+        lastMessageAt:
+          type: ["string", "null"]
+        unreadCount:
+          type: integer
+      required: [personaId, unreadCount]
+
+    SendDmBody:
+      type: object
+      properties:
+        toPersonaId:
+          type: integer
+        fromPersonaId:
+          type: integer
+        content:
+          type: string
+      required: [toPersonaId, fromPersonaId, content]
+
+    DmMessage:
+      type: object
+      properties:
+        id:
+          type: integer
+        fromPersonaId:
+          type: integer
+        toPersonaId:
+          type: integer
+        fromPersona:
+          $ref: "#/components/schemas/Persona"
+        content:
+          type: string
+        createdAt:
+          type: string
+      required: [id, fromPersonaId, toPersonaId, content, createdAt]
