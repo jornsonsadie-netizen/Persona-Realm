@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "AI Roleplay Platform"
+version = "1.0.0"
+id = "artifacts/roleplay"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19936
+
+[services.development]
+run = "pnpm --filter @workspace/roleplay run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/roleplay", "run", "build" ]
+publicDir = "artifacts/roleplay/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19936"
+BASE_PATH = "/"
