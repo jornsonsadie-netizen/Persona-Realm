@@ -1,31 +1,62 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
-import { useCreateCharacter, useListTags, useCreateTag, useUploadImage, getListCharactersQueryKey } from "@workspace/api-client-react";
+import {
+  useCreateCharacter, useUpdateCharacter, useGetCharacter,
+  useListTags, useCreateTag, useUploadImage,
+  getListCharactersQueryKey, getGetCharacterQueryKey,
+} from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
 
 function estimateTokens(text: string) {
   return Math.ceil(text.split(/\s+/).filter(Boolean).length * 1.3);
 }
 
+const EMPTY_FORM = {
+  name: "", age: "", personality: "", description: "",
+  backgroundStory: "", lore: "", introMessage: "", profilePicture: "",
+};
+
 export default function CreateCharacter({ editMode = false, characterId }: { editMode?: boolean; characterId?: number }) {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const createCharacter = useCreateCharacter();
+  const updateCharacter = useUpdateCharacter();
   const uploadImage = useUploadImage();
   const { data: tags } = useListTags();
   const createTag = useCreateTag();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [form, setForm] = useState({
-    name: "", age: "", personality: "", description: "",
-    backgroundStory: "", lore: "", introMessage: "", profilePicture: "",
-  });
+  const { data: existing, isLoading: loadingExisting } = useGetCharacter(
+    characterId ?? 0,
+    { query: { enabled: editMode && !!characterId, queryKey: getGetCharacterQueryKey(characterId ?? 0) } }
+  );
+
+  const [form, setForm] = useState(EMPTY_FORM);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [populated, setPopulated] = useState(false);
+
+  useEffect(() => {
+    if (editMode && existing && !populated) {
+      setForm({
+        name: existing.name ?? "",
+        age: String(existing.age ?? ""),
+        personality: existing.personality ?? "",
+        description: existing.description ?? "",
+        backgroundStory: existing.backgroundStory ?? "",
+        lore: existing.lore ?? "",
+        introMessage: existing.introMessage ?? "",
+        profilePicture: existing.profilePicture ?? "",
+      });
+      setSelectedTags(existing.tags ?? []);
+      setPopulated(true);
+    }
+  }, [editMode, existing, populated]);
 
   const introTokens = estimateTokens(form.introMessage);
+  const isPending = createCharacter.isPending || updateCharacter.isPending;
 
   const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm(f => ({ ...f, [field]: e.target.value }));
@@ -66,25 +97,51 @@ export default function CreateCharacter({ editMode = false, characterId }: { edi
       return;
     }
     try {
-      await createCharacter.mutateAsync({ data: { ...form, age, tags: selectedTags, profilePicture: form.profilePicture || null } });
-      queryClient.invalidateQueries({ queryKey: getListCharactersQueryKey() });
-      setLocation("/discover");
+      const payload = { ...form, age, tags: selectedTags, profilePicture: form.profilePicture || null };
+      if (editMode && characterId) {
+        await updateCharacter.mutateAsync({ id: characterId, data: payload });
+        queryClient.invalidateQueries({ queryKey: getGetCharacterQueryKey(characterId) });
+        queryClient.invalidateQueries({ queryKey: getListCharactersQueryKey() });
+        setLocation(`/characters/${characterId}`);
+      } else {
+        await createCharacter.mutateAsync({ data: payload });
+        queryClient.invalidateQueries({ queryKey: getListCharactersQueryKey() });
+        setLocation("/discover");
+      }
     } catch (err: any) {
       setError(err?.response?.data?.error || err?.message || "Something went wrong");
     }
   };
 
+  if (editMode && loadingExisting) {
+    return (
+      <div className="max-w-2xl mx-auto px-6 py-8">
+        <div className="space-y-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="h-12 rounded-xl animate-pulse" style={{ background: "rgba(255,0,170,0.06)" }} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto px-6 py-8">
       <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: "Rajdhani, serif" }}>Create Character</h1>
-        <p className="text-muted-foreground">Bring your character to life</p>
+        <h1 className="text-4xl font-bold mb-2" style={{ fontFamily: "Rajdhani, serif" }}>
+          {editMode ? "Edit Character" : "Create Character"}
+        </h1>
+        <p className="text-muted-foreground">{editMode ? "Update your character's details" : "Bring your character to life"}</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Profile Picture */}
         <div className="flex items-center gap-5">
-          <div className="w-24 h-24 rounded-xl overflow-hidden cursor-pointer ring-2 ring-primary/30 hover:ring-primary/70 transition-all" style={{ background: "rgba(255,0,170,0.08)" }} onClick={() => fileRef.current?.click()}>
+          <div
+            className="w-24 h-24 rounded-xl overflow-hidden cursor-pointer ring-2 ring-primary/30 hover:ring-primary/70 transition-all"
+            style={{ background: "rgba(255,0,170,0.08)" }}
+            onClick={() => fileRef.current?.click()}
+          >
             {form.profilePicture ? (
               <img src={form.profilePicture} alt="Profile" className="w-full h-full object-cover" />
             ) : (
@@ -95,8 +152,13 @@ export default function CreateCharacter({ editMode = false, characterId }: { edi
           </div>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImage} />
           <div>
-            <button type="button" onClick={() => fileRef.current?.click()} className="px-4 py-2 rounded-lg text-sm transition-all" style={{ background: "rgba(255,0,170,0.1)", border: "1px solid rgba(255,0,170,0.3)", color: "#ff00aa" }}>
-              Choose Image
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className="px-4 py-2 rounded-lg text-sm transition-all"
+              style={{ background: "rgba(255,0,170,0.1)", border: "1px solid rgba(255,0,170,0.3)", color: "#ff00aa" }}
+            >
+              {form.profilePicture ? "Change Image" : "Choose Image"}
             </button>
             <p className="text-xs text-muted-foreground mt-1">Upload from gallery</p>
           </div>
@@ -145,7 +207,7 @@ export default function CreateCharacter({ editMode = false, characterId }: { edi
             {selectedTags.map(tag => (
               <span key={tag} className="px-3 py-1 rounded-full text-xs flex items-center gap-1" style={{ background: "rgba(255,0,170,0.15)", border: "1px solid rgba(255,0,170,0.4)", color: "#ff00aa" }}>
                 {tag}
-                <button type="button" onClick={() => setSelectedTags(p => p.filter(t => t !== tag))} className="ml-1 opacity-70 hover:opacity-100">x</button>
+                <button type="button" onClick={() => setSelectedTags(p => p.filter(t => t !== tag))} className="ml-1 opacity-70 hover:opacity-100">×</button>
               </span>
             ))}
             {tags?.filter(t => !selectedTags.includes(t.name)).map(tag => (
@@ -163,18 +225,30 @@ export default function CreateCharacter({ editMode = false, characterId }: { edi
           />
         </div>
 
-        {error && <p className="text-sm px-4 py-3 rounded-lg" style={{ background: "rgba(255,0,0,0.1)", border: "1px solid rgba(255,0,0,0.3)", color: "#ff6666" }}>{error}</p>}
+        {error && (
+          <p className="text-sm px-4 py-3 rounded-lg" style={{ background: "rgba(255,0,0,0.1)", border: "1px solid rgba(255,0,0,0.3)", color: "#ff6666" }}>{error}</p>
+        )}
 
         <div className="flex gap-3 pt-2">
-          <button type="submit" disabled={createCharacter.isPending} className="flex-1 py-3 rounded-full font-bold transition-all" style={{
-            background: "linear-gradient(135deg, #ff00aa, #9b59ff)",
-            boxShadow: "0 0 20px rgba(255,0,170,0.3)",
-            color: "white",
-            opacity: createCharacter.isPending ? 0.7 : 1,
-          }}>
-            {createCharacter.isPending ? "Creating..." : "Create Character"}
+          <button
+            type="submit"
+            disabled={isPending}
+            className="flex-1 py-3 rounded-full font-bold transition-all"
+            style={{
+              background: "linear-gradient(135deg, #ff00aa, #9b59ff)",
+              boxShadow: "0 0 20px rgba(255,0,170,0.3)",
+              color: "white",
+              opacity: isPending ? 0.7 : 1,
+            }}
+          >
+            {isPending ? (editMode ? "Saving..." : "Creating...") : (editMode ? "Save Changes" : "Create Character")}
           </button>
-          <button type="button" onClick={() => setLocation("/discover")} className="px-6 py-3 rounded-full transition-all" style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.15)" }}>
+          <button
+            type="button"
+            onClick={() => setLocation(editMode && characterId ? `/characters/${characterId}` : "/discover")}
+            className="px-6 py-3 rounded-full transition-all"
+            style={{ background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.15)" }}
+          >
             Cancel
           </button>
         </div>
@@ -186,7 +260,9 @@ export default function CreateCharacter({ editMode = false, characterId }: { edi
 function Field({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider text-muted-foreground">{label}{required && " *"}</label>
+      <label className="block text-xs font-semibold mb-1.5 uppercase tracking-wider text-muted-foreground">
+        {label}{required && " *"}
+      </label>
       <div className="[&_input]:w-full [&_input]:px-4 [&_input]:py-2.5 [&_input]:rounded-xl [&_input]:border [&_input]:border-primary/20 [&_input]:bg-primary/5 [&_input]:focus:outline-none [&_input]:focus:border-primary/60 [&_input]:transition-all [&_textarea]:w-full [&_textarea]:px-4 [&_textarea]:py-2.5 [&_textarea]:rounded-xl [&_textarea]:border [&_textarea]:border-primary/20 [&_textarea]:bg-primary/5 [&_textarea]:focus:outline-none [&_textarea]:focus:border-primary/60 [&_textarea]:transition-all [&_textarea]:resize-none">
         {children}
       </div>
