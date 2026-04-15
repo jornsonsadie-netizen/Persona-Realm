@@ -13,24 +13,32 @@ export default function CharacterDetail() {
   const deleteCharacter = useDeleteCharacter();
   const createChat = useCreateChat();
   const queryClient = useQueryClient();
-  const [selectedPersona, setSelectedPersona] = useState<number | null>(null);
   const [showPersonaSelect, setShowPersonaSelect] = useState(false);
   const [starting, setStarting] = useState(false);
 
   const isOwner = user?.id === character?.ownerUserId;
 
-  const handleStartChat = async () => {
-    if (!selectedPersona) {
-      setShowPersonaSelect(true);
-      return;
-    }
+  const handleStartChat = async (personaId: number) => {
     setStarting(true);
     try {
-      const chat = await createChat.mutateAsync({ data: { characterId: Number(id), personaId: selectedPersona } });
+      const chat = await createChat.mutateAsync({ data: { characterId: Number(id), personaId } });
       queryClient.invalidateQueries({ queryKey: getListChatsQueryKey() });
       setLocation(`/chats/${chat.id}`);
-    } catch (e) {
+    } catch {
       setStarting(false);
+    }
+  };
+
+  const handleClickStart = () => {
+    const mainPersona = personas?.find(p => p.isMain);
+    const firstPersona = personas?.[0];
+    const pId = mainPersona?.id ?? firstPersona?.id;
+    if (pId) {
+      handleStartChat(pId);
+    } else if (personas && personas.length > 0) {
+      setShowPersonaSelect(true);
+    } else {
+      setShowPersonaSelect(true);
     }
   };
 
@@ -51,8 +59,6 @@ export default function CharacterDetail() {
   if (!character) {
     return <div className="max-w-4xl mx-auto px-6 py-8 text-center text-muted-foreground">Character not found.</div>;
   }
-
-  const mainPersona = personas?.find(p => p.isMain);
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-8">
@@ -114,41 +120,50 @@ export default function CharacterDetail() {
 
           {/* Actions */}
           <div className="flex flex-wrap gap-3 pt-4 border-t border-primary/10">
-            {showPersonaSelect && !selectedPersona ? (
+            {showPersonaSelect ? (
               <div className="w-full space-y-3">
-                <p className="text-sm text-muted-foreground">Select a persona to start chatting:</p>
+                <p className="text-sm text-muted-foreground">Select a persona to chat as:</p>
                 {!personas || personas.length === 0 ? (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-2">You have no personas yet.</p>
-                    <button onClick={() => setLocation("/personas/new")} className="px-4 py-2 rounded-lg text-sm" style={{ background: "rgba(255,0,170,0.2)", border: "1px solid rgba(255,0,170,0.4)", color: "#ff00aa" }}>
-                      Create a Persona
+                    <p className="text-sm text-muted-foreground mb-2">You have no personas yet. Create one first!</p>
+                    <button
+                      onClick={() => setLocation("/personas")}
+                      className="px-4 py-2 rounded-lg text-sm"
+                      style={{ background: "rgba(255,0,170,0.2)", border: "1px solid rgba(255,0,170,0.4)", color: "#ff00aa" }}
+                    >
+                      Go to Personas
                     </button>
                   </div>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {personas.map(p => (
-                      <button key={p.id} onClick={() => { setSelectedPersona(p.id); handleStartChat(); }} className="px-4 py-2 rounded-lg text-sm transition-all" style={{
-                        background: p.isMain ? "rgba(255,0,170,0.2)" : "rgba(255,255,255,0.05)",
-                        border: p.isMain ? "1px solid rgba(255,0,170,0.5)" : "1px solid rgba(255,255,255,0.15)",
-                        color: p.isMain ? "#ff00aa" : "inherit",
-                      }}>
-                        {p.name}{p.isMain && " (Main)"}
+                      <button
+                        key={p.id}
+                        onClick={() => handleStartChat(p.id)}
+                        disabled={starting}
+                        className="px-4 py-2 rounded-lg text-sm transition-all"
+                        style={{
+                          background: p.isMain ? "rgba(255,0,170,0.2)" : "rgba(255,255,255,0.05)",
+                          border: p.isMain ? "1px solid rgba(255,0,170,0.5)" : "1px solid rgba(255,255,255,0.15)",
+                          color: p.isMain ? "#ff00aa" : "inherit",
+                          opacity: starting ? 0.7 : 1,
+                        }}
+                      >
+                        {starting ? "Starting..." : `${p.name}${p.isMain ? " (Main)" : ""}`}
                       </button>
                     ))}
                   </div>
                 )}
+                <button
+                  onClick={() => setShowPersonaSelect(false)}
+                  className="text-xs text-muted-foreground hover:text-primary transition-colors"
+                >
+                  Cancel
+                </button>
               </div>
             ) : (
               <button
-                onClick={() => {
-                  const pId = mainPersona?.id || personas?.[0]?.id;
-                  if (pId) {
-                    setSelectedPersona(pId);
-                    setTimeout(handleStartChat, 50);
-                  } else {
-                    setShowPersonaSelect(true);
-                  }
-                }}
+                onClick={handleClickStart}
                 disabled={starting}
                 className="px-8 py-3 rounded-full font-bold transition-all"
                 style={{
@@ -164,10 +179,18 @@ export default function CharacterDetail() {
 
             {isOwner && (
               <>
-                <button onClick={() => setLocation(`/characters/${id}/edit`)} className="px-6 py-3 rounded-full font-semibold transition-all" style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)" }}>
+                <button
+                  onClick={() => setLocation(`/characters/${id}/edit`)}
+                  className="px-6 py-3 rounded-full font-semibold transition-all"
+                  style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.2)" }}
+                >
                   Edit
                 </button>
-                <button onClick={handleDelete} className="px-6 py-3 rounded-full font-semibold transition-all" style={{ background: "rgba(255,0,0,0.1)", border: "1px solid rgba(255,0,0,0.3)", color: "#ff4444" }}>
+                <button
+                  onClick={handleDelete}
+                  className="px-6 py-3 rounded-full font-semibold transition-all"
+                  style={{ background: "rgba(255,0,0,0.1)", border: "1px solid rgba(255,0,0,0.3)", color: "#ff4444" }}
+                >
                   Delete
                 </button>
               </>
