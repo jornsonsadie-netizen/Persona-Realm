@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { ClerkProvider, SignIn, SignUp, Show, useClerk, useUser } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, useClerk, useUser } from "@clerk/react";
 import { Switch, Route, useLocation, Router as WouterRouter, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -118,7 +118,7 @@ function NavBar() {
       </div>
 
       {/* Desktop Nav */}
-      <Show when="signed-in">
+      {user && (
         <nav className="hidden md:flex items-center gap-1">
           {navLinks.map((link) => (
             <button
@@ -135,11 +135,11 @@ function NavBar() {
             </button>
           ))}
         </nav>
-      </Show>
+      )}
 
       {/* Right side */}
       <div className="flex items-center gap-3">
-        <Show when="signed-in">
+        {user ? (
           <div className="relative">
             <button
               onClick={() => setMenuOpen(!menuOpen)}
@@ -183,8 +183,7 @@ function NavBar() {
               </div>
             )}
           </div>
-        </Show>
-        <Show when="signed-out">
+        ) : (
           <a
             href={`${basePath}/sign-in`}
             className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
@@ -196,7 +195,7 @@ function NavBar() {
           >
             Sign In
           </a>
-        </Show>
+        )}
       </div>
     </header>
   );
