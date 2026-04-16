@@ -132,6 +132,21 @@ paths:
         "204":
           description: Deleted
 
+  /admin/models/available:
+    get:
+      operationId: fetchAvailableModels
+      tags: [admin]
+      summary: Fetch available models from the configured AI provider
+      responses:
+        "200":
+          description: Available models
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AvailableModel"
+
   /admin/stats:
     get:
       operationId: getAdminStats
@@ -1424,3 +1439,16 @@ components:
         createdAt:
           type: string
       required: [id, fromPersonaId, toPersonaId, content, createdAt]
+
+    AvailableModel:
+      type: object
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+        created:
+          type: integer
+        owned_by:
+          type: string
+      required: [id]

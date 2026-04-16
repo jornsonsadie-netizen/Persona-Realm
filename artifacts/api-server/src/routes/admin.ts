@@ -46,6 +46,27 @@ router.patch("/admin/settings", requireAuth, async (req, res): Promise<void> => 
   res.json({ ...settings, aiProviderApiKey: settings.aiProviderApiKey ? "***hidden***" : null });
 });
 
+// GET /admin/models/available — fetch available models from the configured provider
+router.get("/admin/models/available", requireAuth, async (_req, res): Promise<void> => {
+  let [settings] = await db.select().from(adminSettingsTable).limit(1);
+  const endpoint = settings?.aiProviderEndpoint || "https://integrate.api.nvidia.com/v1";
+  const apiKey = settings?.aiProviderApiKey || process.env.NVIDIA_API_KEY || "";
+
+  try {
+    const response = await fetch(`${endpoint}/models`, {
+      headers: { Authorization: `Bearer ${apiKey}` },
+    });
+    if (!response.ok) {
+      res.status(502).json({ error: `Provider returned ${response.status}` });
+      return;
+    }
+    const data = (await response.json()) as { data?: unknown[] };
+    res.json(data.data ?? []);
+  } catch (err) {
+    res.status(502).json({ error: "Failed to reach AI provider" });
+  }
+});
+
 // GET /admin/models
 router.get("/admin/models", requireAuth, async (_req, res): Promise<void> => {
   const models = await db.select().from(aiModelsTable).orderBy(aiModelsTable.id);
