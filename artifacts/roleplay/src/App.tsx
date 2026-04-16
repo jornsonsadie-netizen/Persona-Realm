@@ -20,7 +20,7 @@ import { MessagesList, DmRoom } from "./pages/Messages";
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL as string | undefined;
-const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+const basePath = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "") || "/";
 
 const queryClient = new QueryClient();
 
@@ -55,23 +55,21 @@ function SignUpPage() {
 }
 
 function ClerkQueryClientCacheInvalidator() {
-  const { addListener } = useClerk();
+  const clerk = useClerk();
   const queryClient = useQueryClient();
   const prevUserIdRef = useRef<string | null | undefined>(undefined);
 
   useEffect(() => {
-    const unsubscribe = addListener(({ user }) => {
+    // addListener signature changed in Clerk v6 — guard against it returning void
+    const result = (clerk as any).addListener?.(({ user }: any) => {
       const userId = user?.id ?? null;
-      if (
-        prevUserIdRef.current !== undefined &&
-        prevUserIdRef.current !== userId
-      ) {
+      if (prevUserIdRef.current !== undefined && prevUserIdRef.current !== userId) {
         queryClient.clear();
       }
       prevUserIdRef.current = userId;
     });
-    return unsubscribe;
-  }, [addListener, queryClient]);
+    return typeof result === "function" ? result : undefined;
+  }, [clerk, queryClient]);
 
   return null;
 }
@@ -287,7 +285,7 @@ function ClerkProviderWithRoutes() {
 function App() {
   return (
     <TooltipProvider>
-      <WouterRouter base={basePath}>
+      <WouterRouter>
         <ClerkProviderWithRoutes />
       </WouterRouter>
       <Toaster />
