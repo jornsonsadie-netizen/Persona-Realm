@@ -36,16 +36,16 @@ if (!clerkPubKey) {
 
 function SignInPage() {
   return (
-    <div className="flex justify-center items-center h-full py-16">
-      <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} />
+    <div className="flex justify-center w-full mt-24 mb-16">
+      <SignIn routing="hash" signUpUrl={`${basePath}/sign-up`} forceRedirectUrl="/discover" />
     </div>
   );
 }
 
 function SignUpPage() {
   return (
-    <div className="flex justify-center items-center h-full py-16">
-      <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} />
+    <div className="flex justify-center w-full mt-24 mb-16">
+      <SignUp routing="hash" signInUrl={`${basePath}/sign-in`} forceRedirectUrl="/discover" />
     </div>
   );
 }
