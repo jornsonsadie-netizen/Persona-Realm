@@ -85,6 +85,7 @@ function NavBar() {
   const { user } = useUser();
   const { signOut } = useClerk();
   const [menuOpen, setMenuOpen] = useState(false);
+  const isAdmin = user?.primaryEmailAddress?.emailAddress === "keyamuha@gmail.com";
 
   return (
     <header
@@ -114,7 +115,7 @@ function NavBar() {
       {/* Desktop Nav */}
       {user && (
         <nav className="hidden md:flex items-center gap-1">
-          {navLinks.map((link) => (
+          {navLinks.filter(l => l.path !== "/admin" || isAdmin).map((link) => (
             <button
               key={link.path}
               onClick={() => setLocation(link.path)}
@@ -161,12 +162,14 @@ function NavBar() {
                 >
                   My Personas
                 </button>
-                <button
-                  onClick={() => { setLocation("/admin"); setMenuOpen(false); }}
-                  className="w-full px-4 py-2.5 text-left text-sm hover:bg-primary/10 transition-colors"
-                >
-                  Admin
-                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => { setLocation("/admin"); setMenuOpen(false); }}
+                    className="w-full px-4 py-2.5 text-left text-sm hover:bg-primary/10 transition-colors"
+                  >
+                    Admin
+                  </button>
+                )}
                 <div className="h-px my-1" style={{ background: "rgba(255,0,170,0.2)" }} />
                 <button
                   onClick={() => signOut()}
@@ -200,6 +203,14 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   if (!isLoaded) return null;
   if (!user) return <Redirect to="/sign-in" />;
+  return <>{children}</>;
+}
+
+function RequireAdmin({ children }: { children: React.ReactNode }) {
+  const { user, isLoaded } = useUser();
+  if (!isLoaded) return null;
+  const email = user?.primaryEmailAddress?.emailAddress;
+  if (!user || email !== "keyamuha@gmail.com") return <Redirect to="/discover" />;
   return <>{children}</>;
 }
 
@@ -262,7 +273,7 @@ function ClerkProviderWithRoutes() {
               </Route>
 
               <Route path="/admin">
-                <RequireAuth><AdminDashboard /></RequireAuth>
+                <RequireAdmin><AdminDashboard /></RequireAdmin>
               </Route>
 
               <Route path="/sign-in/*?" component={SignInPage} />
