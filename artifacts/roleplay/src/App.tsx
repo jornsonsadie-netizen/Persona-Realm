@@ -280,9 +280,18 @@ function ClerkProviderWithRoutes() {
         <div className="w-16 h-16 border-4 border-red-900 border-t-red-500 rounded-full animate-spin mb-6"></div>
         <h2 className="text-xl font-bold text-red-500 mb-2">Connection is taking longer than usual</h2>
         <p className="text-gray-400 max-w-md mb-6">We are having trouble connecting to the authentication service. This usually happens on slow mobile connections or due to ad-blockers.</p>
-        <div className="flex gap-4">
-          <button onClick={() => window.location.reload()} className="px-6 py-2 bg-red-600 text-white rounded font-bold hover:bg-red-500">Retry Connection</button>
-          <button onClick={() => setLoadingTimeout(false)} className="px-6 py-2 bg-gray-800 text-white rounded font-bold hover:bg-gray-700">Wait Longer</button>
+        <div className="flex flex-col gap-2 w-full max-w-xs">
+          <button 
+            onClick={() => {
+              const start = Date.now();
+              fetch(`${clerkProxyUrl || ""}/v1/client`).then(r => alert(`Proxy Status: ${r.status} (${Date.now() - start}ms)`)).catch(e => alert(`Proxy Error: ${e.message}`));
+            }} 
+            className="px-6 py-2 bg-blue-600 text-white rounded font-bold hover:bg-blue-500"
+          >
+            Test Proxy Link
+          </button>
+          <button onClick={() => window.location.reload()} className="px-6 py-2 bg-red-600 text-white rounded font-bold hover:bg-red-500">Retry App Connection</button>
+          <button onClick={() => setLoadingTimeout(false)} className="px-6 py-2 bg-gray-800 text-white rounded font-bold hover:bg-gray-700">Go Back</button>
         </div>
         <div className="mt-8 text-xs text-gray-600 font-mono text-left bg-gray-900/50 p-4 rounded border border-gray-800">
           <p>Key: {clerkPubKey.slice(0, 8)}...</p>
