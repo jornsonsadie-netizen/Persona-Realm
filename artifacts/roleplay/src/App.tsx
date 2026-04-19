@@ -20,7 +20,10 @@ import { MessagesList, DmRoom } from "./pages/Messages";
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "";
 const clerkProxyUrlEnv = import.meta.env.VITE_CLERK_PROXY_URL as string | undefined;
-const clerkProxyUrl = (clerkProxyUrlEnv && clerkProxyUrlEnv !== "" && clerkProxyUrlEnv !== "undefined") ? clerkProxyUrlEnv : undefined;
+const isProd = import.meta.env.PROD;
+const clerkProxyUrl = (clerkProxyUrlEnv && clerkProxyUrlEnv !== "" && clerkProxyUrlEnv !== "undefined") 
+  ? clerkProxyUrlEnv 
+  : (isProd ? `${window.location.origin}/api/__clerk` : undefined);
 const basePath = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
 
 const queryClient = new QueryClient();
@@ -262,6 +265,33 @@ function Home() {
 
 function ClerkProviderWithRoutes() {
   const [, setLocation] = useLocation();
+  const [loadingTimeout, setLoadingTimeout] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLoadingTimeout(true);
+    }, 6000); // 6 second hang detection
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (loadingTimeout) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-8 text-center">
+        <div className="w-16 h-16 border-4 border-red-900 border-t-red-500 rounded-full animate-spin mb-6"></div>
+        <h2 className="text-xl font-bold text-red-500 mb-2">Connection is taking longer than usual</h2>
+        <p className="text-gray-400 max-w-md mb-6">We are having trouble connecting to the authentication service. This usually happens on slow mobile connections or due to ad-blockers.</p>
+        <div className="flex gap-4">
+          <button onClick={() => window.location.reload()} className="px-6 py-2 bg-red-600 text-white rounded font-bold hover:bg-red-500">Retry Connection</button>
+          <button onClick={() => setLoadingTimeout(false)} className="px-6 py-2 bg-gray-800 text-white rounded font-bold hover:bg-gray-700">Wait Longer</button>
+        </div>
+        <div className="mt-8 text-xs text-gray-600 font-mono text-left bg-gray-900/50 p-4 rounded border border-gray-800">
+          <p>Key: {clerkPubKey.slice(0, 8)}...</p>
+          <p>Proxy: {clerkProxyUrl || "None"}</p>
+          <p>Base: {basePath || "Root"}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <ClerkProvider

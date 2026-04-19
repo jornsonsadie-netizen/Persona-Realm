@@ -59,6 +59,17 @@ export function clerkProxyMiddleware(): RequestHandler {
           proxyReq.setHeader("X-Forwarded-For", clientIp);
         }
       },
+      proxyRes: (proxyRes, req, res) => {
+        // Ensure Set-Cookie headers are preserved and modified if necessary
+        const cookies = proxyRes.headers["set-cookie"];
+        if (cookies) {
+          proxyRes.headers["set-cookie"] = cookies.map((cookie) => 
+            cookie.replace(/Domain=[^;]+;?/i, "") // Let the browser handle the domain
+          );
+        }
+      },
     },
+    // Fix for some Vercel/Node versions regarding session affinity
+    xfwd: true,
   }) as RequestHandler;
 }
