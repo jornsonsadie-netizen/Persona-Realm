@@ -18,7 +18,7 @@ import { GroupsList, GroupRoom } from "./pages/Groups";
 import People from "./pages/People";
 import { MessagesList, DmRoom } from "./pages/Messages";
 
-const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "";
 const clerkProxyUrlEnv = import.meta.env.VITE_CLERK_PROXY_URL as string | undefined;
 const clerkProxyUrl = (clerkProxyUrlEnv && clerkProxyUrlEnv !== "" && clerkProxyUrlEnv !== "undefined") ? clerkProxyUrlEnv : undefined;
 const basePath = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
@@ -31,9 +31,8 @@ function stripBase(path: string): string {
     : path;
 }
 
-if (!clerkPubKey) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY in .env file");
-}
+// Removed top-level throw to prevent module-load "dark screen" crashes
+// This check is now performed safely inside the App component within the ErrorBoundary
 
 class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { hasError: boolean, error: Error | null }> {
   constructor(props: any) {
@@ -329,6 +328,16 @@ function ClerkProviderWithRoutes() {
 }
 
 function App() {
+  if (!clerkPubKey) {
+    return (
+      <div className="p-8 text-red-500 bg-black min-h-screen font-mono">
+        <h1 className="text-2xl font-bold mb-4">CRITICAL CONFIGURATION ERROR</h1>
+        <p className="mb-2">The <code className="bg-red-950 px-1">VITE_CLERK_PUBLISHABLE_KEY</code> is missing from your production environment.</p>
+        <p className="text-sm opacity-70">Please add your Clerk Publishable Key to your Vercel Environment Variables and redeploy.</p>
+      </div>
+    );
+  }
+
   return (
     <ErrorBoundary>
       <TooltipProvider>
