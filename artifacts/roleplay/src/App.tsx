@@ -87,7 +87,7 @@ const navLinks = [
 function NavBar() {
   const [location, setLocation] = useLocation();
   const { user } = useUser();
-  const { signOut } = useClerk();
+  const { signOut, openSignIn } = useClerk();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -182,8 +182,8 @@ function NavBar() {
             )}
           </div>
         ) : (
-          <a
-            href={`${basePath}/sign-in`}
+          <button
+            onClick={() => openSignIn()}
             className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
             style={{
               background: "linear-gradient(135deg, #ff00aa, #9b59ff)",
@@ -192,7 +192,7 @@ function NavBar() {
             }}
           >
             Sign In
-          </a>
+          </button>
         )}
       </div>
     </header>
