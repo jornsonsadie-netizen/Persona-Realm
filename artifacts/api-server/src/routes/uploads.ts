@@ -8,9 +8,15 @@ import { requireAuth } from "../middlewares/requireAuth";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const uploadsDir = path.join(__dirname, "..", "..", "uploads");
+const isVercel = !!process.env.VERCEL;
+const uploadsDir = isVercel ? "/tmp/uploads" : path.join(__dirname, "..", "..", "uploads");
+
 if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+  try {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  } catch (err) {
+    console.warn("Could not create uploads directory synchronously:", err);
+  }
 }
 
 const storage = multer.diskStorage({
