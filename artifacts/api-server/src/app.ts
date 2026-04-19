@@ -36,7 +36,7 @@ app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(clerkMiddleware());
 
 // Serve uploaded files statically
-const isVercel = !!process.env.VERCEL;
+const isVercel = !!process.env.VERCEL || __dirname.includes("/var/task");
 const uploadsDir = isVercel ? "/tmp/uploads" : path.join(__dirname, "..", "uploads");
 app.use("/api/uploads/files", express.static(uploadsDir));
 
