@@ -284,7 +284,12 @@ function ClerkProviderWithRoutes() {
           <button 
             onClick={() => {
               const start = Date.now();
-              fetch(`${clerkProxyUrl || ""}/v1/client`).then(r => alert(`Proxy Status: ${r.status} (${Date.now() - start}ms)`)).catch(e => alert(`Proxy Error: ${e.message}`));
+              fetch(`${clerkProxyUrl || ""}/v1/client`)
+                .then(async (r) => {
+                  const body = !r.ok ? await r.text() : "Success";
+                  alert(`Proxy Status: ${r.status} (${Date.now() - start}ms)\nDetails: ${body.slice(0, 100)}`);
+                })
+                .catch(e => alert(`Proxy Error: ${e.message}`));
             }} 
             className="px-6 py-2 bg-blue-600 text-white rounded font-bold hover:bg-blue-500"
           >

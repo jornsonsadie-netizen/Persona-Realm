@@ -49,8 +49,18 @@ export function clerkProxyMiddleware(): RequestHandler {
         const host = req.headers.host || "";
         const proxyUrl = `${protocol}://${host}${CLERK_PROXY_PATH}`;
 
+        // Add debugging logs
+        console.log(`[DEBUG] Proxy Outgoing: ${proxyUrl}`);
+        console.log(`[DEBUG] Key Type: ${secretKey.startsWith("sk_test") ? "TEST (Development)" : "LIVE (Production)"}`);
+
         proxyReq.setHeader("Clerk-Proxy-Url", proxyUrl);
         proxyReq.setHeader("Clerk-Secret-Key", secretKey);
+        
+        // Sni/Host normalization
+        if (fapiTarget.includes("accounts.dev") || fapiTarget.includes("clerk.dev")) {
+          const targetHost = new URL(fapiTarget).host;
+          proxyReq.setHeader("Host", targetHost);
+        }
 
         const xff = req.headers["x-forwarded-for"];
         const clientIp =
