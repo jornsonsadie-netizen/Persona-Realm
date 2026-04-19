@@ -21,9 +21,10 @@ import { MessagesList, DmRoom } from "./pages/Messages";
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY || "";
 const clerkProxyUrlEnv = import.meta.env.VITE_CLERK_PROXY_URL as string | undefined;
 const isProd = import.meta.env.PROD;
+const usesTestKey = clerkPubKey.startsWith("pk_test");
 const clerkProxyUrl = (clerkProxyUrlEnv && clerkProxyUrlEnv !== "" && clerkProxyUrlEnv !== "undefined") 
   ? clerkProxyUrlEnv 
-  : (isProd ? `${window.location.origin}/api/__clerk` : undefined);
+  : (isProd && !usesTestKey ? `${window.location.origin}/api/__clerk` : undefined);
 const basePath = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
 
 const queryClient = new QueryClient();
