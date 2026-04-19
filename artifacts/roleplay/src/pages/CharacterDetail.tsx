@@ -1,6 +1,6 @@
 import { useParams, useLocation } from "wouter";
 import { useGetCharacter, useDeleteCharacter, useListPersonas, useCreateChat, getListChatsQueryKey } from "@workspace/api-client-react";
-import { useUser } from "@clerk/react";
+import { useAuth } from "../context/AuthContext";
 import { useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -9,7 +9,7 @@ export default function CharacterDetail() {
   const [, setLocation] = useLocation();
   const { data: character, isLoading } = useGetCharacter(Number(id));
   const { data: personas } = useListPersonas();
-  const { user } = useUser();
+  const { user } = useAuth();
   const deleteCharacter = useDeleteCharacter();
   const createChat = useCreateChat();
   const queryClient = useQueryClient();

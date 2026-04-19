@@ -6,3 +6,4 @@ export * from "./personas";
 export * from "./chats";
 export * from "./groups";
 export * from "./dm";
+export * from "./users";

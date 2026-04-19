@@ -1,8 +1,6 @@
 import { useLocation } from "wouter";
 import { useGetFeaturedCharacters } from "@workspace/api-client-react";
-import { useClerk } from "@clerk/react";
-
-const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+const basePath = "";
 
 export default function Landing() {
   const [, setLocation] = useLocation();

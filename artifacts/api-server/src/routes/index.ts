@@ -8,9 +8,11 @@ import chatsRouter from "./chats";
 import groupsRouter from "./groups";
 import uploadsRouter from "./uploads";
 import dmRouter from "./dm";
+import authRouter from "./auth";
 
 const router: IRouter = Router();
 
+router.use(authRouter);
 router.use(healthRouter);
 router.use(adminRouter);
 router.use(charactersRouter);
