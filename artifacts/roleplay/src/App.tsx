@@ -294,7 +294,11 @@ function ClerkProviderWithRoutes() {
           <button onClick={() => setLoadingTimeout(false)} className="px-6 py-2 bg-gray-800 text-white rounded font-bold hover:bg-gray-700">Go Back</button>
         </div>
         <div className="mt-8 text-xs text-gray-600 font-mono text-left bg-gray-900/50 p-4 rounded border border-gray-800">
-          <p>Key: {clerkPubKey.slice(0, 8)}...</p>
+          <p className="text-blue-400 font-bold mb-2">Clerk Instance: rapid-moth-56</p>
+          <p>Key: {clerkPubKey.slice(0, 10)}...</p>
+          {clerkPubKey.startsWith("pk_test") && (
+            <p className="text-red-500 font-bold mt-1">⚠️ CRITICAL: YOU ARE USING A TEST KEY IN PRODUCTION</p>
+          )}
           <p>Proxy: {clerkProxyUrl || "None"}</p>
           <p>Base: {basePath || "Root"}</p>
         </div>

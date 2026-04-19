@@ -22,7 +22,7 @@
 import { createProxyMiddleware } from "http-proxy-middleware";
 import type { RequestHandler } from "express";
 
-const DEFAULT_CLERK_FAPI = "https://frontend-api.clerk.dev";
+const DEFAULT_CLERK_FAPI = "https://rapid-moth-56.clerk.accounts.dev";
 export const CLERK_PROXY_PATH = "/api/__clerk";
 
 export function clerkProxyMiddleware(): RequestHandler {
