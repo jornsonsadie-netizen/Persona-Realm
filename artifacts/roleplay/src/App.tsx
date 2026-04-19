@@ -35,20 +35,16 @@ if (!clerkPubKey) {
 }
 
 function SignInPage() {
-  // To update login providers, app branding, or OAuth settings use the Auth
-  // pane in the workspace toolbar. More information can be found in the Replit docs.
   return (
-    <div className="flex justify-center items-center min-h-[100dvh] pt-16 pb-16">
+    <div className="flex justify-center items-center h-full py-16">
       <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} />
     </div>
   );
 }
 
 function SignUpPage() {
-  // To update login providers, app branding, or OAuth settings use the Auth
-  // pane in the workspace toolbar. More information can be found in the Replit docs.
   return (
-    <div className="flex justify-center items-center min-h-[100dvh] pt-16 pb-16">
+    <div className="flex justify-center items-center h-full py-16">
       <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} />
     </div>
   );
@@ -87,7 +83,7 @@ const navLinks = [
 function NavBar() {
   const [location, setLocation] = useLocation();
   const { user } = useUser();
-  const { signOut, openSignIn } = useClerk();
+  const { signOut } = useClerk();
   const [menuOpen, setMenuOpen] = useState(false);
 
   return (
@@ -183,7 +179,7 @@ function NavBar() {
           </div>
         ) : (
           <button
-            onClick={() => openSignIn()}
+            onClick={() => setLocation(`${basePath}/sign-in`)}
             className="px-4 py-2 rounded-full text-sm font-semibold transition-all"
             style={{
               background: "linear-gradient(135deg, #ff00aa, #9b59ff)",

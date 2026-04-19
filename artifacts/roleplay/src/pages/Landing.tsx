@@ -7,7 +7,6 @@ const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 export default function Landing() {
   const [, setLocation] = useLocation();
   const { data: featured } = useGetFeaturedCharacters();
-  const { openSignIn, openSignUp } = useClerk();
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -41,14 +40,14 @@ export default function Landing() {
           Build your persona. Craft your characters. Begin your story.
         </p>
         <div className="flex flex-col sm:flex-row gap-4">
-          <button onClick={() => openSignUp()} className="px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 cursor-pointer" style={{
+          <button onClick={() => setLocation(`${basePath}/sign-up`)} className="px-10 py-4 rounded-full font-bold text-lg transition-all duration-300 cursor-pointer" style={{
             background: "linear-gradient(135deg, #ff00aa, #9b59ff)",
             boxShadow: "0 0 30px rgba(255,0,170,0.5), 0 0 60px rgba(155,89,255,0.3)",
             color: "white",
           }}>
             Begin Your Journey
           </button>
-          <button onClick={() => openSignIn()} className="px-10 py-4 rounded-full font-bold text-lg border border-primary/50 text-primary backdrop-blur bg-primary/5 hover:bg-primary/10 transition-all duration-300 cursor-pointer">
+          <button onClick={() => setLocation(`${basePath}/sign-in`)} className="px-10 py-4 rounded-full font-bold text-lg border border-primary/50 text-primary backdrop-blur bg-primary/5 hover:bg-primary/10 transition-all duration-300 cursor-pointer">
             Sign In
           </button>
         </div>
