@@ -37,7 +37,7 @@ if (!clerkPubKey) {
 function SignInPage() {
   return (
     <div className="flex w-full justify-center mt-24 mb-16 px-4">
-      <SignIn routing="virtual" signUpUrl={`${basePath}/sign-up`} forceRedirectUrl="/discover" />
+      <SignIn routing="path" path={`${basePath}/sign-in`} signUpUrl={`${basePath}/sign-up`} forceRedirectUrl="/discover" />
     </div>
   );
 }
@@ -45,7 +45,7 @@ function SignInPage() {
 function SignUpPage() {
   return (
     <div className="flex w-full justify-center mt-24 mb-16 px-4">
-      <SignUp routing="virtual" signInUrl={`${basePath}/sign-in`} forceRedirectUrl="/discover" />
+      <SignUp routing="path" path={`${basePath}/sign-up`} signInUrl={`${basePath}/sign-in`} forceRedirectUrl="/discover" />
     </div>
   );
 }
