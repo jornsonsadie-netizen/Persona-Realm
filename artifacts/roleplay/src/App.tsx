@@ -19,7 +19,8 @@ import People from "./pages/People";
 import { MessagesList, DmRoom } from "./pages/Messages";
 
 const clerkPubKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL as string | undefined;
+const clerkProxyUrlEnv = import.meta.env.VITE_CLERK_PROXY_URL as string | undefined;
+const clerkProxyUrl = (clerkProxyUrlEnv && clerkProxyUrlEnv !== "" && clerkProxyUrlEnv !== "undefined") ? clerkProxyUrlEnv : undefined;
 const basePath = (import.meta.env.BASE_URL ?? "/").replace(/\/$/, "");
 
 const queryClient = new QueryClient();
@@ -48,11 +49,25 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode }, { has
   render() {
     if (this.state.hasError) {
       return (
-        <div className="p-8 text-red-500">
-          <h1 className="text-2xl font-bold mb-4">Something went wrong.</h1>
-          <pre className="text-sm bg-black p-4 overflow-auto rounded border border-red-900">{this.state.error?.toString()}</pre>
-          <pre className="text-xs bg-black p-4 mt-2 overflow-auto rounded border border-red-900">{this.state.error?.stack}</pre>
-          <button onClick={() => window.location.href = "/"} className="mt-4 px-4 py-2 bg-red-600 text-white rounded">Go Home</button>
+        <div className="p-8 text-red-500 bg-black min-h-screen">
+          <h1 className="text-3xl font-bold mb-4 border-b border-red-900 pb-2">Application Crash Detected</h1>
+          <p className="mb-4 text-red-400">Please provide the technical details below to support:</p>
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs uppercase tracking-widest text-red-700 font-bold mb-1">Error Message</p>
+              <pre className="text-sm bg-red-950/20 p-4 overflow-auto rounded border border-red-900 text-red-200">{this.state.error?.toString()}</pre>
+            </div>
+            <div>
+              <p className="text-xs uppercase tracking-widest text-red-700 font-bold mb-1">Stack Trace</p>
+              <pre className="text-xs bg-red-950/20 p-4 overflow-auto rounded border border-red-900 text-red-300 antialiased font-mono">{this.state.error?.stack}</pre>
+            </div>
+          </div>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-8 px-6 py-2 bg-red-600 hover:bg-red-500 transition-colors text-white rounded font-bold uppercase tracking-wider text-sm"
+          >
+            Attempt Reload
+          </button>
         </div>
       );
     }

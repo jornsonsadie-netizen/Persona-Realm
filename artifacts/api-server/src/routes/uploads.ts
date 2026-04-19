@@ -8,7 +8,7 @@ import { requireAuth } from "../middlewares/requireAuth";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const isVercel = !!process.env.VERCEL || __dirname.includes("/var/task");
+const isVercel = !!process.env.VERCEL || !!process.env.LAMBDA_TASK_ROOT || __dirname.includes("/var/task");
 const uploadsDir = isVercel ? "/tmp/uploads" : path.join(__dirname, "..", "..", "uploads");
 
 if (!fs.existsSync(uploadsDir)) {
